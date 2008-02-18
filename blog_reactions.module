@@ -15,7 +15,6 @@ function blog_reactions_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
   
   $cache_id = 'blog_reactions-'. $node->nid;
   $lifetime = 24*60*60; //24hours
-  $url = url('node/'. $node->nid, NULL, NULL, TRUE);
   
   switch ($op) {
     case 'view':
