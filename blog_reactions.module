@@ -118,7 +118,7 @@ function theme_blog_reactions_google($data = array()) {
   $output = '<div class="blog-reactions-google">';
   $output .= '<div class="reaction">';
   $output .= '<span class="date">'. format_date($data->published, 'small') .'</span> ';
-  $output .= '<span class="title">'. l($data->title ? $data->title : 'n/a', $data->link['@attributes']['href']) .'</span> ';
+  $output .= '<span class="title">'. l($data->title ? truncate_utf8(strip_tags($data->title), 60, TRUE, TRUE) : 'n/a', $data->link['@attributes']['href']) .'</span> ';
   $output .= '<span class="content">'. truncate_utf8(strip_tags($data->content), 180, TRUE, TRUE) .'</span>';
   $output .= '</div>';
   $output .= '</div>';
@@ -132,7 +132,7 @@ function theme_blog_reactions_technorati($data = array()) {
   $output = '<div class="blog-reactions-technorati"';
   $output .= '<div class="reaction">';
   $output .= '<span class="date">'. format_date($data->pubDate, 'small') .'</span> ';
-  $output .= '<span class="title">'. l($data->title ? $data->title : 'n/a', $data->link) .'</span> ';
+  $output .= '<span class="title">'. l($data->title ? truncate_utf8(strip_tags($data->title), 60, TRUE, TRUE) : 'n/a', $data->link) .'</span> ';
   $output .= '<span class="content">'. truncate_utf8(strip_tags($data->description), 180, TRUE, TRUE) .'</span>';
   $output .= '</div>';
   $output .= '</div>';
