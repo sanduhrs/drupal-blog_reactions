@@ -1,0 +1,141 @@
+<?php
+/* $Id$ */
+
+/**
+ * Blog reactions
+ * 
+ * @author Stefan Auditor <stefan.auditor@erdfisch.de>
+ */
+
+/**
+ * Implementation of hook_nodeapi().
+ */
+function blog_reactions_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
+  if ($node->type != 'blog') return;
+  
+  $cache_id = 'blog_reactions-'. $node->nid;
+  $lifetime = 24*60*60; //24hours
+  $url = url('node/'. $node->nid, NULL, NULL, TRUE);
+  
+  switch ($op) {
+    case 'view':
+      if (is_array($node->blog_reactions)) {
+        $node->content['blog_reactions'] = array(
+          '#value' => theme('blog_reactions', $node->blog_reactions),
+          '#weight' => 10,
+        );
+      }
+      break;
+    case 'load':
+      $cache = cache_get($cid);
+      
+      $cache = cache_get($cache_id .'-google');
+      if (empty($cache) OR (($cache->created+$lifetime) <= time())) {
+        cache_set($cache_id .'-google', 'cache', serialize(blog_reactions_fetch_google($node->nid)));
+        $cache = cache_get($cache_id .'-google');
+      }
+      $data['google'] = unserialize($cache->data);
+      
+      $cache = cache_get($cache_id .'-technorati');
+      if (empty($cache) OR (($cache->created+$lifetime) <= time())) {
+        cache_set($cache_id .'-technorati', 'cache', serialize(blog_reactions_fetch_technorati($node->nid)));
+        $cache = cache_get($cache_id .'-technorati');
+      }
+      $data['technorati'] = unserialize($cache->data);
+
+      $node->blog_reactions = $data;
+      break;
+  }
+}
+
+/**
+ * Fetch XML-Feed from blogsearch.google.de 
+ */
+function blog_reactions_fetch_google($nid = NULL, $uri = NULL) {
+  $url = 'http://blogsearch.google.de/blogsearch_feeds?q=link:'. ($uri ? $uri : url('node/'. $nid, NULL, NULL, TRUE));
+  $response = drupal_http_request($url);
+  $xml = simplexml_load_string($response->data);
+  
+  $data = array();
+  if ($xml->entry) {
+    foreach ($xml->entry as $key => $value) {
+      $data["$value->id"]->id         = (string) trim($value->id);
+      $data["$value->id"]->title      = (string) trim($value->title);
+      $data["$value->id"]->link       = (array) $value->link;
+      $data["$value->id"]->content    = (string) trim($value->content);
+      $data["$value->id"]->author     = (array) $value->author;
+      $data["$value->id"]->published  = (integer) strtotime(trim($value->published));
+      $data["$value->id"]->updated    = (integer) strtotime(trim($value->updated));
+    }
+  }
+
+  return $data;
+}
+
+/**
+ * Fetch XML-Feed from feeds.technorati.com
+ */
+function blog_reactions_fetch_technorati($nid = NULL, $uri = NULL) {
+  $url = 'http://feeds.technorati.com/search/'. ($uri ? $uri : url('node/'. $nid, NULL, NULL, TRUE));
+  $response = drupal_http_request($url);
+  $xml = simplexml_load_string($response->data);
+  
+  $data = array();
+  if ($xml->entry) {
+    foreach ($xml->channel->item as $key => $value) {
+      $data["$value->guid"]->guid         = (string) trim($value->guid);
+      $data["$value->guid"]->title        = (string) trim($value->title);
+      $data["$value->guid"]->link         = (string) trim($value->link);
+      $data["$value->guid"]->comments     = (string) trim($value->comments);
+      $data["$value->guid"]->pubDate      = (integer) strtotime(trim($value->pubDate));
+      $data["$value->guid"]->description  = (string) trim($value->description);
+      $data["$value->guid"]->source       = (string) trim($value->source);
+    }
+  }
+  
+  return $data;
+}
+
+/**
+ * Theme container for all reactions
+ */
+function theme_blog_reactions($data = array()) {
+  $output = '<div class="blog-reactions">';
+  $output .= '<h3 class="title">'. t('Blog reactions') .'</h3>';
+  foreach ($data as $service => $values) {
+    foreach ($values as $key => $items) {
+      $elements .= theme('blog_reactions_'. $service, $items);
+    }
+  }
+  $output .= $elements ? $elements : t('No reactions yet.');
+  $output .= '</div>';
+  return $output;
+}
+
+/**
+ * Theme google items
+ */
+function theme_blog_reactions_google($data = array()) {
+  $output = '<div class="blog-reactions-google">';
+  $output .= '<div class="reaction">';
+  $output .= '<span class="date">'. format_date($data->published, 'small') .'</span> ';
+  $output .= '<span class="title">'. l($data->title ? $data->title : 'n/a', $data->link['@attributes']['href']) .'</span> ';
+  $output .= '<span class="content">'. truncate_utf8(strip_tags($data->content), 180, TRUE, TRUE) .'</span>';
+  $output .= '</div>';
+  $output .= '</div>';
+  return $output;
+}
+
+/**
+ * Theme technorati items
+ */
+function theme_blog_reactions_technorati($data = array()) {
+  $output = '<div class="blog-reactions-technorati"';
+  $output .= '<div class="reaction">';
+  $output .= '<span class="date">'. format_date($data->pubDate, 'small') .'</span> ';
+  $output .= '<span class="title">'. l($data->title ? $data->title : 'n/a', $data->link) .'</span> ';
+  $output .= '<span class="content">'. truncate_utf8(strip_tags($data->description), 180, TRUE, TRUE) .'</span>';
+  $output .= '</div>';
+  $output .= '</div>';
+  return $output;
+}
