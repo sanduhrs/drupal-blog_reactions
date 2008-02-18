@@ -8,10 +8,30 @@
  */
 
 /**
+ * Implementation of hook_menu().
+ */
+function blog_reactions_menu($may_cache) {
+  $items = array();
+  if ($may_cache) {
+    $items[] = array(
+      'path' => 'admin/settings/blog_reactions',
+      'title' => t('Blog reactions'),
+      'description' => t('Change blog reactions settings.'),
+      'callback' => 'drupal_get_form',
+      'callback arguments' => 'blog_reactions_admin_settings',
+      'access' => user_access('administer site configuration'),
+      'type' => MENU_NORMAL_ITEM,
+    );
+  }
+  return $items;
+}
+
+/**
  * Implementation of hook_nodeapi().
  */
 function blog_reactions_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
-  if ($node->type != 'blog') return;
+  $types = variable_get('blog_reactions_node_types', array());
+  if (!in_array($node->type, $types)) return;
   
   $cache_id = 'blog_reactions-'. $node->nid;
   $lifetime = 24*60*60; //24hours
@@ -45,6 +65,23 @@ function blog_reactions_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
       $node->blog_reactions = $data;
       break;
   }
+}
+
+/**
+ *
+ */
+function blog_reactions_admin_settings() {
+  $form['blog_reactions'] = array(
+    '#value' => '',
+  );
+  $form['blog_reactions_node_types'] = array(
+    '#type' => 'select',
+    '#options' => node_get_types('names'),
+    '#default_value' => variable_get('blog_reactions_node_types', ''),
+    '#multiple' => TRUE,
+    '#description' => t('Choose the node type(s) that should fetch blog reactions.'),
+  );
+  return system_settings_form($form);
 }
 
 /**
