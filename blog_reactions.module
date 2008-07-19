@@ -145,27 +145,27 @@ function blog_reactions_fetch_google($nid = NULL, $uri = NULL) {
   $data = array();
   if ($xml->entry) {
     foreach ($xml->entry as $key => $value) {
-      $data["google:$value->id"]->nid        = $nid;
-      $data["google:$value->id"]->brid       = (string) trim($value->id);
-      $data["google:$value->id"]->title      = (string) trim($value->title);
+      $data["$value->id"]->nid        = $nid;
+      $data["$value->id"]->brid       = (string) trim($value->id);
+      $data["$value->id"]->title      = (string) trim($value->title);
       
       $link = (array) $value->link;
-      $data["google:$value->id"]->link = array(
+      $data["$value->id"]->link = array(
         'rel'           => (string) $link['@attributes']['rel'],
         'href'          => (string) $link['@attributes']['href'],
         'content_type'  => (string) $link['@attributes']['type'],
       );
-      $data["google:$value->id"]->comments   = $comment_url .(string) $link['@attributes']['href'];
-      $data["google:$value->id"]->content    = (string) trim($value->content);
+      $data["$value->id"]->comments   = $comment_url .(string) $link['@attributes']['href'];
+      $data["$value->id"]->content    = (string) trim($value->content);
       
       $author = (array) $value->author;
-      $data["google:$value->id"]->source = array (
+      $data["$value->id"]->source = array (
         'author' => (string) trim($author['name']),
         'uri'    => (string) trim($author['uri']),
       );
-      $data["google:$value->id"]->published  = (integer) strtotime(trim($value->published));
-      $data["google:$value->id"]->updated    = (integer) strtotime(trim($value->updated));
-      $data["google:$value->id"]->link = array(
+      $data["$value->id"]->published  = (integer) strtotime(trim($value->published));
+      $data["$value->id"]->updated    = (integer) strtotime(trim($value->updated));
+      $data["$value->id"]->link = array(
         'rel'           => (string) $link['@attributes']['rel'],
         'href'          => (string) $link['@attributes']['href'],
         'content_type'  => (string) $link['@attributes']['type'],
@@ -188,22 +188,22 @@ function blog_reactions_fetch_technorati($nid = NULL, $uri = NULL) {
   $data = array();
   if ($xml->channel->item) {
     foreach ($xml->channel->item as $key => $value) {
-      $data["technorati:$value->guid"]->nid        = $nid;
-      $data["technorati:$value->guid"]->brid       = (string) trim($value->guid);
-      $data["technorati:$value->guid"]->title      = (string) trim($value->title);
-      $data["technorati:$value->guid"]->link = array(
+      $data["$value->guid"]->nid        = $nid;
+      $data["$value->guid"]->brid       = (string) trim($value->guid);
+      $data["$value->guid"]->title      = (string) trim($value->title);
+      $data["$value->guid"]->link = array(
         'rel'           => 'alternative',
         'href'          => (string) $value->link,
         'content_type'  => 'text/html',
       );
-      $data["technorati:$value->guid"]->comments   = $comment_url .(string) $value->link;
-      $data["technorati:$value->guid"]->content    = (string) trim($value->description);
-      $data["technorati:$value->guid"]->source = array (
+      $data["$value->guid"]->comments   = $comment_url .(string) $value->link;
+      $data["$value->guid"]->content    = (string) trim($value->description);
+      $data["$value->guid"]->source = array (
         'author' => (string) trim($value->source),
         'uri'    => (string) trim(parse_url($value->link, PHP_URL_HOST)),
       );
-      $data["technorati:$value->guid"]->published  = (integer) strtotime(trim($value->pubDate));
-      $data["technorati:$value->guid"]->updated    = (integer) strtotime(trim($value->pubDate));
+      $data["$value->guid"]->published  = (integer) strtotime(trim($value->pubDate));
+      $data["$value->guid"]->updated    = (integer) strtotime(trim($value->pubDate));
     }
   }
   if ($xml->channel->item->title == 'No results' && strpos($xml->channel->item->link, 'technorati.com')) {
