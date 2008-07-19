@@ -1,5 +1,5 @@
 ; $Id$
 name = Blog reactions 
 description  = Display Technorati and Google Blogsearch results for nodes.
-; dependencies = module1 module2 module3
+dependencies = blog
 ; package      = "Your arbitrary grouping string"
