@@ -2,14 +2,114 @@
 /* $Id$ */
 
 /**
+ * Blog reactions
+ * 
+ * Fetch blog reactions from Technorati and Google Blog Search
+ * 
+ * @author Stefan Auditor <stefan.auditor@erdfisch.de>
+ */
+
+/**
+ * Implementation of hook_schema().
+ */
+function blog_reactions_schema() {
+  $schema['blog_reactions'] = array(
+    'description' => t('The base table for blog reactions.'),
+    'fields' => array(
+      'nid' => array(
+        'description' => t('The primary identifier for a node.'),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE),
+      'brid' => array(
+        'description' => t('The primary identifier for a rection.'),
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => ''),
+      'title' => array(
+        'description' => t('The title for the reaction.'),
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => ''),
+      'rel' => array(
+        'description' => t('Link rel value.'),
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => ''),
+      'href' => array(
+        'description' => t('Link destination.'),
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => ''),
+      'content_type' => array(
+        'description' => t('Link content-type.'),
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => ''),
+      'comments' => array(
+        'description' => t('Link to comments of reaction.'),
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => ''),
+      'content' => array(
+        'description' => t('Description for the reaction.'),
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => ''),
+      'author' => array(
+        'description' => t('Source author name.'),
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => ''),
+      'uri' => array(
+        'description' => t('Source author website.'),
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => ''),
+      'published' => array(
+        'description' => t('Published timestamp.'),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE),
+      'updated' => array(
+        'description' => t('Updated timestamp.'),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE),
+      'timestamp' => array(
+        'description' => t('Last fetched timestamp.'),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE),
+      ),
+    'indexes' => array(
+      'nid'        => array('nid'),
+      'brid'        => array('brid'),
+      ),
+  );
+  
+  return $schema;
+}
+
+/**
  * Implementation of hook_install().
  */
 function blog_reactions_install() {
+  drupal_install_schema('blog_reactions');
 }
 
 /**
  * Implementation of hook_uninstall().
  */
 function blog_reactions_uninstall() {
-  cache_clear_all('blog_reactions', 'cache', TRUE);
+  drupal_uninstall_schema('blog_reactions');
 }
