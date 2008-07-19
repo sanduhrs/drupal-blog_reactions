@@ -5,11 +5,37 @@
  * Implementation of hook_install().
  */
 function blog_reactions_install() {
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      db_query("CREATE TABLE IF NOT EXISTS {blog_reactions} (
+                  nid int(10) unsigned NOT NULL,
+                  brid varchar(255) NOT NULL default '',
+                  title varchar(255) NOT NULL default '',
+                  rel varchar(255) NOT NULL default '',
+                  href varchar(255) NOT NULL default '',
+                  content_type varchar(255) NOT NULL default '',
+                  comments varchar(255) NOT NULL default '',
+                  content varchar(255) NOT NULL default '',
+                  author varchar(255) NOT NULL default '',
+                  uri varchar(255) NOT NULL default '',
+                  published int(10) unsigned NOT NULL,
+                  updated int(10) unsigned NOT NULL,
+                  timestamp int(10) unsigned NOT NULL,
+                  KEY nid (nid),
+                  KEY brid (brid)
+                ) ENGINE=MyISAM DEFAULT CHARSET=utf8;"
+      );
+      break;
+    case 'pgsql':
+      break;
+  }
 }
 
 /**
  * Implementation of hook_uninstall().
  */
 function blog_reactions_uninstall() {
-  cache_clear_all('blog_reactions', 'cache', TRUE);
+  variable_del('blog_reactions_node_types');
+  db_query("DROP TABLE {blog_reactions}");
 }
