@@ -107,9 +107,7 @@ function blog_reactions_get_items($nid) {
  * Save multiple reaction items
  */
 function blog_reactions_set_items($reactions = array()) {
-  $i=0;
   foreach ($reactions as $key => $item) {
-    $i++;
     $exists = blog_reactions_item_exists($item->brid);
     if ($exists) {
       blog_reactions_update_item($item);
@@ -174,7 +172,7 @@ function blog_reactions_fetch_google($nid = NULL, $uri = NULL) {
   $comment_url = 'http://blogsearch.google.com/blogsearch?q=link:';
   $response = drupal_http_request($feed_url);
   $xml = simplexml_load_string($response->data);
-drupal_set_message($feed_url);
+
   $data = array();
   if ($xml->entry) {
     foreach ($xml->entry as $key => $value) {
@@ -217,7 +215,7 @@ function blog_reactions_fetch_technorati($nid = NULL, $uri = NULL) {
   $comment_url = 'http://technorati.com/search/';
   $response    = drupal_http_request($feed_url);
   $xml         = simplexml_load_string($response->data);
-drupal_set_message($feed_url);
+
   $data = array();
   if ($xml->channel->item) {
     foreach ($xml->channel->item as $key => $value) {
