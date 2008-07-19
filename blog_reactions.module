@@ -30,6 +30,22 @@ function blog_reactions_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
 }
 
 /**
+ * Implementation of hook_exit().
+ */
+function blog_reactions_exit($destination = NULL) {
+  if (arg(0) == 'node' AND is_numeric(arg(1))) {
+    $node = node_load(array('nid' => arg(1)));
+    if ($node->type == 'blog') {
+      if (($node->blog_reactions['last_update']+(60*60)) <= time()) {
+        $uri = url('node/'. $node->nid, array('absolute' => TRUE));
+        $reactions = blog_reactions_fetch($node->nid, $uri);
+        blog_reactions_set_items($reactions);
+      }
+    }
+  }
+}
+
+/**
  * Load all reactions on a node
  */
 function blog_reactions_get_items($nid) {
@@ -52,6 +68,23 @@ function blog_reactions_get_items($nid) {
     $reactions[$reaction->brid]->updated   = $reaction->updated;
   }
   return $reactions ? $reactions : array();
+}
+
+/**
+ * Save multiple reaction items
+ */
+function blog_reactions_set_items($reactions = array()) {
+  $i=0;
+  foreach ($reactions as $key => $item) {
+    $i++;
+    $exists = blog_reactions_item_exists($item->brid);
+    if ($exists) {
+      blog_reactions_update_item($item);
+    }
+    else {
+      blog_reactions_set_item($item);
+    }
+  }
 }
 
 /**
@@ -91,23 +124,6 @@ function blog_reactions_update_item($item) {
 }
 
 /**
- * Save multiple reaction items
- */
-function blog_reactions_set_items($reactions = array()) {
-  $i=0;
-  foreach ($reactions as $key => $item) {
-    $i++;
-    $exists = blog_reactions_item_exists($item->brid);
-    if ($exists) {
-      blog_reactions_update_item($item);
-    }
-    else {
-      blog_reactions_set_item($item);
-    }
-  }
-}
-
-/**
  * Fetch XML-feed from Technorati and Google
  */
 function blog_reactions_fetch($nid, $uri = NULL) {
@@ -115,22 +131,6 @@ function blog_reactions_fetch($nid, $uri = NULL) {
   $reactions_technorati = blog_reactions_fetch_technorati($nid, $uri);
   $reactions = array_merge($reactions_google, $reactions_technorati);
   return $reactions; 
-}
-
-/**
- * Implementation of hook_exit().
- */
-function blog_reactions_exit($destination = NULL) {
-  if (arg(0) == 'node' AND is_numeric(arg(1))) {
-    $node = node_load(array('nid' => arg(1)));
-    if ($node->type == 'blog') {
-      if (($node->blog_reactions['last_update']+(60*60)) <= time()) {
-        $uri = url('node/'. $node->nid, array('absolute' => TRUE));
-        $reactions = blog_reactions_fetch($node->nid, $uri);
-        blog_reactions_set_items($reactions);
-      }
-    }
-  }
 }
 
 /**
