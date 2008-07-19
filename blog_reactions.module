@@ -15,7 +15,7 @@
 function blog_reactions_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
   switch ($op) {
     case 'view':
-      if ($node->type == 'blog') {
+      if ($node->type == 'blog' && !$a3) {
         $node->content['blog_reactions'] = array(
           '#value' => theme('blog_reactions', $node->blog_reactions['items']),
           '#weight' => 10,
