@@ -2,5 +2,4 @@
 name = Blog reactions 
 description  = Diplay Technorati and Google Blogsearch results for a blog node.
 core = 6.x
-dependencies = blog
 ; package      = "Your arbitrary grouping string"
