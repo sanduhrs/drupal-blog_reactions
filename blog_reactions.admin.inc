@@ -24,8 +24,8 @@ function blog_reactions_admin_settings() {
     '#type' => 'checkboxes',
     '#options' => array(
       'technorati' => t('Technorati'),
-      'google'     => t('Google Blogsearch'),
-      'yahoo'      => t('Yahoo! Bloglines'),
+      'blogsearch' => t('Google Blogsearch'),
+      'bloglines'  => t('Yahoo! Bloglines'),
     ),
     '#default_value' => variable_get('blog_reactions_services', array('google','technorati','yahoo')),
     '#description' => t('Choose the services that should be queried.'),
