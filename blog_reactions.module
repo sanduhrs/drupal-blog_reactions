@@ -226,7 +226,7 @@ function blog_reactions_fetch_blogsearch($nid = NULL, $uri = NULL) {
     foreach ($xml->entry as $key => $value) {
       $data["$value->id"]->nid        = $nid;
       $data["$value->id"]->brid       = (string) trim($value->id);
-      $data["$value->guid"]->service    = 'blogsearch';
+      $data["$value->id"]->service    = 'blogsearch';
       $data["$value->id"]->title      = (string) trim($value->title);
       
       $link = (array) $value->link;
