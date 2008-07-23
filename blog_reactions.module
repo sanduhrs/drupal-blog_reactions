@@ -129,7 +129,7 @@ function blog_reactions_last_update($nid) {
  * Save single reaction item
  */
 function blog_reactions_set_item($item) {
-  return db_query("INSERT INTO {blog_reactions} (nid, brid, title, rel, href, content_type, comments, content, author, uri, published, updated, timestamp) VALUES (%d, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', %d, %d, %d)", $item->nid, $item->brid, $item->title, $item->link['rel'], $item->link['href'], $item->link['content_type'], $item->comments, $item->content, $item->source['author'], $item->source['uri'], $item->published, $item->updated, time());
+  return db_query("INSERT INTO {blog_reactions} (nid, brid, service, title, rel, href, content_type, comments, content, author, uri, published, updated, timestamp) VALUES (%d, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', %d, %d, %d)", $item->nid, $item->brid, $item->service, $item->title, $item->link['rel'], $item->link['href'], $item->link['content_type'], $item->comments, $item->content, $item->source['author'], $item->source['uri'], $item->published, $item->updated, time());
 }
 
 /**
@@ -158,23 +158,60 @@ function blog_reactions_update_item($item) {
  * Fetch XML-feed from Technorati and Google
  */
 function blog_reactions_fetch($nid, $uri = NULL) {
-  $reactions_google     = array();
   $reactions_technorati = array();
+  $reactions_blogsearch = array();
   $reactions_bloglines  = array();
-  $services = variable_get('blog_reactions_services', array('google','technorati','yahoo'));
+  $services = variable_get('blog_reactions_services', array('technorati', 'blogsearch', 'bloglines'));
   
-  if (in_array('google', $services)) {
-    $reactions_google     = blog_reactions_fetch_google($nid, $uri);
-  }
   if (in_array('technorati', $services)) {
     $reactions_technorati = blog_reactions_fetch_technorati($nid, $uri);
   }
-  if (in_array('yahoo', $services)) {
+  if (in_array('blogsearch', $services)) {
+    $reactions_blogsearch = blog_reactions_fetch_google($nid, $uri);
+  }
+  if (in_array('bloglines', $services)) {
     $reactions_bloglines  = blog_reactions_fetch_bloglines($nid, $uri);
   }
   
-  $reactions = array_merge($reactions_google, $reactions_technorati, $reactions_bloglines);
-  return $reactions; 
+  $reactions = array_merge($reactions_technorati, $reactions_blogsearch, $reactions_bloglines);
+  return $reactions;
+}
+
+/**
+ * Fetch XML-Feed from feeds.technorati.com
+ */
+function blog_reactions_fetch_technorati($nid = NULL, $uri = NULL) {
+  $feed_url    = 'http://feeds.technorati.com/search/'. ($uri ? $uri : url('node/'. $nid, NULL, NULL, TRUE));
+  $comment_url = 'http://technorati.com/search/';
+  $response    = drupal_http_request($feed_url);
+  $xml         = simplexml_load_string($response->data);
+
+  $data = array();
+  if ($xml->channel->item) {
+    foreach ($xml->channel->item as $key => $value) {
+      $data["$value->guid"]->nid        = $nid;
+      $data["$value->guid"]->service    = 'technorati';
+      $data["$value->guid"]->brid       = (string) trim($value->guid);
+      $data["$value->guid"]->title      = (string) trim($value->title);
+      $data["$value->guid"]->link = array(
+        'rel'           => 'alternative',
+        'href'          => (string) $value->link,
+        'content_type'  => 'text/html',
+      );
+      $data["$value->guid"]->comments   = $comment_url .(string) $value->link;
+      $data["$value->guid"]->content    = (string) trim($value->description);
+      $data["$value->guid"]->source = array (
+        'author' => (string) trim($value->source),
+        'uri'    => (string) trim(parse_url($value->link, PHP_URL_HOST)),
+      );
+      $data["$value->guid"]->published  = (integer) strtotime(trim($value->pubDate));
+      $data["$value->guid"]->updated    = (integer) strtotime(trim($value->pubDate));
+    }
+  }
+  if ($xml->channel->item->title == 'No results' && strpos($xml->channel->item->link, 'technorati.com')) {
+    unset($data);
+  }
+  return $data ? $data : array();
 }
 
 /**
@@ -190,6 +227,7 @@ function blog_reactions_fetch_google($nid = NULL, $uri = NULL) {
   if ($xml->entry) {
     foreach ($xml->entry as $key => $value) {
       $data["$value->id"]->nid        = $nid;
+      $data["$value->id"]->service    = 'blogsearch';
       $data["$value->id"]->brid       = (string) trim($value->id);
       $data["$value->id"]->title      = (string) trim($value->title);
       
@@ -221,42 +259,6 @@ function blog_reactions_fetch_google($nid = NULL, $uri = NULL) {
 }
 
 /**
- * Fetch XML-Feed from feeds.technorati.com
- */
-function blog_reactions_fetch_technorati($nid = NULL, $uri = NULL) {
-  $feed_url    = 'http://feeds.technorati.com/search/'. ($uri ? $uri : url('node/'. $nid, NULL, NULL, TRUE));
-  $comment_url = 'http://technorati.com/search/';
-  $response    = drupal_http_request($feed_url);
-  $xml         = simplexml_load_string($response->data);
-
-  $data = array();
-  if ($xml->channel->item) {
-    foreach ($xml->channel->item as $key => $value) {
-      $data["$value->guid"]->nid        = $nid;
-      $data["$value->guid"]->brid       = (string) trim($value->guid);
-      $data["$value->guid"]->title      = (string) trim($value->title);
-      $data["$value->guid"]->link = array(
-        'rel'           => 'alternative',
-        'href'          => (string) $value->link,
-        'content_type'  => 'text/html',
-      );
-      $data["$value->guid"]->comments   = $comment_url .(string) $value->link;
-      $data["$value->guid"]->content    = (string) trim($value->description);
-      $data["$value->guid"]->source = array (
-        'author' => (string) trim($value->source),
-        'uri'    => (string) trim(parse_url($value->link, PHP_URL_HOST)),
-      );
-      $data["$value->guid"]->published  = (integer) strtotime(trim($value->pubDate));
-      $data["$value->guid"]->updated    = (integer) strtotime(trim($value->pubDate));
-    }
-  }
-  if ($xml->channel->item->title == 'No results' && strpos($xml->channel->item->link, 'technorati.com')) {
-    unset($data);
-  }
-  return $data ? $data : array();
-}
-
-/**
  * Fetch XML-Feed from bloglines.com
  */
 function blog_reactions_fetch_bloglines($nid = NULL, $uri = NULL) {
@@ -269,6 +271,7 @@ function blog_reactions_fetch_bloglines($nid = NULL, $uri = NULL) {
   if ($xml->channel->item) {
     foreach ($xml->channel->item as $key => $value) {
       $data["$value->guid"]->nid        = $nid;
+      $data["$value->guid"]->service    = 'bloglines';
       $data["$value->guid"]->brid       = (string) trim($value->guid);
       $data["$value->guid"]->title      = (string) trim($value->title);
       $data["$value->guid"]->link = array(
@@ -333,8 +336,8 @@ function blog_reactions_admin_settings() {
     '#type' => 'checkboxes',
     '#options' => array(
       'technorati' => t('Technorati'),
-      'google'     => t('Google Blogsearch'),
-      'yahoo'      => t('Yahoo! Bloglines'),
+      'blogsearch' => t('Google Blogsearch'),
+      'bloglines'  => t('Yahoo! Bloglines'),
     ),
     '#default_value' => variable_get('blog_reactions_services', array('google','technorati','yahoo')),
     '#description' => t('Choose the services that should be queried.'),
