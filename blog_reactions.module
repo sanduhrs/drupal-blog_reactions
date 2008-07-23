@@ -188,8 +188,8 @@ function blog_reactions_fetch_technorati($nid = NULL, $uri = NULL) {
   if ($xml->channel->item) {
     foreach ($xml->channel->item as $key => $value) {
       $data["$value->guid"]->nid        = $nid;
-      $data["$value->guid"]->service    = 'technorati';
       $data["$value->guid"]->brid       = (string) trim($value->guid);
+      $data["$value->guid"]->service    = 'technorati';
       $data["$value->guid"]->title      = (string) trim($value->title);
       $data["$value->guid"]->link = array(
         'rel'           => 'alternative',
