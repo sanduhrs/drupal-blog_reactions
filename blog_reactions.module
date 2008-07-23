@@ -188,6 +188,7 @@ function blog_reactions_fetch_technorati($nid = NULL, $uri = NULL) {
   if ($xml->channel->item) {
     foreach ($xml->channel->item as $key => $value) {
       $data["$value->guid"]->nid        = $nid;
+      $data["$value->guid"]->service    = 'technorati';
       $data["$value->guid"]->brid       = (string) trim($value->guid);
       $data["$value->guid"]->title      = (string) trim($value->title);
       $data["$value->guid"]->link = array(
@@ -225,6 +226,7 @@ function blog_reactions_fetch_blogsearch($nid = NULL, $uri = NULL) {
     foreach ($xml->entry as $key => $value) {
       $data["$value->id"]->nid        = $nid;
       $data["$value->id"]->brid       = (string) trim($value->id);
+      $data["$value->id"]->service    = 'blogsearch';
       $data["$value->id"]->title      = (string) trim($value->title);
       
       $link = (array) $value->link;
@@ -268,6 +270,7 @@ function blog_reactions_fetch_bloglines($nid = NULL, $uri = NULL) {
     foreach ($xml->channel->item as $key => $value) {
       $data["$value->guid"]->nid        = $nid;
       $data["$value->guid"]->brid       = (string) trim($value->guid);
+      $data["$value->guid"]->service    = 'bloglines';
       $data["$value->guid"]->title      = (string) trim($value->title);
       $data["$value->guid"]->link = array(
         'rel'           => 'alternative',
