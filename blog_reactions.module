@@ -155,7 +155,7 @@ function blog_reactions_update_item($item) {
 }
 
 /**
- * Fetch XML-feed from Technorati and Google
+ * Fetch XML-feed from Technorati, Blogsearch and Bloglines 
  */
 function blog_reactions_fetch($nid, $uri = NULL) {
   $reactions_technorati = array();
@@ -167,7 +167,7 @@ function blog_reactions_fetch($nid, $uri = NULL) {
     $reactions_technorati = blog_reactions_fetch_technorati($nid, $uri);
   }
   if (in_array('blogsearch', $services)) {
-    $reactions_blogsearch = blog_reactions_fetch_google($nid, $uri);
+    $reactions_blogsearch = blog_reactions_fetch_blogsearch($nid, $uri);
   }
   if (in_array('bloglines', $services)) {
     $reactions_bloglines  = blog_reactions_fetch_bloglines($nid, $uri);
@@ -217,7 +217,7 @@ function blog_reactions_fetch_technorati($nid = NULL, $uri = NULL) {
 /**
  * Fetch XML-Feed from blogsearch.google.com
  */
-function blog_reactions_fetch_google($nid = NULL, $uri = NULL) {
+function blog_reactions_fetch_blogsearch($nid = NULL, $uri = NULL) {
   $feed_url    = 'http://blogsearch.google.com/blogsearch_feeds?q=link:'. ($uri ? $uri : url('node/'. $nid, NULL, NULL, TRUE));
   $comment_url = 'http://blogsearch.google.com/blogsearch?q=link:';
   $response = drupal_http_request($feed_url);
@@ -339,7 +339,7 @@ function blog_reactions_admin_settings() {
       'blogsearch' => t('Google Blogsearch'),
       'bloglines'  => t('Yahoo! Bloglines'),
     ),
-    '#default_value' => variable_get('blog_reactions_services', array('google','technorati','yahoo')),
+    '#default_value' => variable_get('blog_reactions_services', array('technorati', 'blogsearch', 'yahoo')),
     '#description' => t('Choose the services that should be queried.'),
   );
   return system_settings_form($form);
