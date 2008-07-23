@@ -155,7 +155,7 @@ function blog_reactions_update_item($item) {
 }
 
 /**
- * Fetch XML-feed from Technorati, Blogsearch and Bloglines 
+ * Fetch XML-feed from Technorati, Blogsearch and Bloglines
  */
 function blog_reactions_fetch($nid, $uri = NULL) {
   $reactions_technorati = array();
@@ -164,7 +164,7 @@ function blog_reactions_fetch($nid, $uri = NULL) {
   $services = variable_get('blog_reactions_services', array('technorati', 'blogsearch', 'bloglines'));
   
   if (in_array('technorati', $services)) {
-  $reactions_technorati = blog_reactions_fetch_technorati($nid, $uri);
+    $reactions_technorati = blog_reactions_fetch_technorati($nid, $uri);
   }
   if (in_array('blogsearch', $services)) {
     $reactions_blogsearch = blog_reactions_fetch_blogsearch($nid, $uri);
@@ -190,8 +190,8 @@ function blog_reactions_fetch_technorati($nid = NULL, $uri = NULL) {
   if ($xml->channel->item) {
     foreach ($xml->channel->item as $key => $value) {
       $data["$value->guid"]->nid        = $nid;
-      $data["$value->guid"]->service    = 'technorati';
       $data["$value->guid"]->brid       = (string) trim($value->guid);
+      $data["$value->guid"]->service    = 'technorati';
       $data["$value->guid"]->title      = (string) trim($value->title);
       $data["$value->guid"]->link = array(
         'rel'           => 'alternative',
@@ -222,13 +222,13 @@ function blog_reactions_fetch_blogsearch($nid = NULL, $uri = NULL) {
   $comment_url = 'http://blogsearch.google.com/blogsearch?q=link:';
   $response = drupal_http_request($feed_url);
   $xml = simplexml_load_string($response->data);
-
+  
   $data = array();
   if ($xml->entry) {
     foreach ($xml->entry as $key => $value) {
       $data["$value->id"]->nid        = $nid;
-      $data["$value->id"]->service    = 'blogsearch';
       $data["$value->id"]->brid       = (string) trim($value->id);
+      $data["$value->id"]->service    = 'blogsearch';
       $data["$value->id"]->title      = (string) trim($value->title);
       
       $link = (array) $value->link;
@@ -271,8 +271,8 @@ function blog_reactions_fetch_bloglines($nid = NULL, $uri = NULL) {
   if ($xml->channel->item) {
     foreach ($xml->channel->item as $key => $value) {
       $data["$value->guid"]->nid        = $nid;
-      $data["$value->guid"]->service    = 'bloglines';
       $data["$value->guid"]->brid       = (string) trim($value->guid);
+      $data["$value->guid"]->service    = 'bloglines';
       $data["$value->guid"]->title      = (string) trim($value->title);
       $data["$value->guid"]->link = array(
         'rel'           => 'alternative',
