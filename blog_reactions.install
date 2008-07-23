@@ -27,6 +27,12 @@ function blog_reactions_schema() {
         'length' => 255,
         'not null' => TRUE,
         'default' => ''),
+      'service' => array(
+        'description' => t('The reactions origin.'),
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => ''),
       'title' => array(
         'description' => t('The title for the reaction.'),
         'type' => 'varchar',
@@ -112,4 +118,13 @@ function blog_reactions_install() {
  */
 function blog_reactions_uninstall() {
   drupal_uninstall_schema('blog_reactions');
+}
+
+/**
+ * Implementation of hook_update_N().
+ */
+function blog_reactions_update_1() {
+  $ret = array();
+  db_add_field($ret, 'blog_reactions', 'service', array('type' => 'varchar', 'length' => 255, 'not null' => TRUE, 'default' => ''));
+  return $ret;
 }

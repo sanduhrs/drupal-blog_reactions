@@ -156,9 +156,22 @@ function blog_reactions_update_item($item) {
  * Fetch XML-feed from Technorati and Google
  */
 function blog_reactions_fetch($nid, $uri = NULL) {
-  $reactions_google     = blog_reactions_fetch_google($nid, $uri);
-  $reactions_technorati = blog_reactions_fetch_technorati($nid, $uri);
-  $reactions = array_merge($reactions_google, $reactions_technorati);
+  $reactions_google     = array();
+  $reactions_technorati = array();
+  $reactions_bloglines  = array();
+  $services = variable_get('blog_reactions_services', array('google','technorati','yahoo'));
+  
+  if (in_array('google', $services)) {
+    $reactions_google     = blog_reactions_fetch_google($nid, $uri);
+  }
+  if (in_array('technorati', $services)) {
+    $reactions_technorati = blog_reactions_fetch_technorati($nid, $uri);
+  }
+  if (in_array('yahoo', $services)) {
+    $reactions_bloglines  = blog_reactions_fetch_bloglines($nid, $uri);
+  }
+  
+  $reactions = array_merge($reactions_google, $reactions_technorati, $reactions_bloglines);
   return $reactions; 
 }
 
@@ -242,6 +255,40 @@ function blog_reactions_fetch_technorati($nid = NULL, $uri = NULL) {
 }
 
 /**
+ * Fetch XML-Feed from bloglines.com
+ */
+function blog_reactions_fetch_bloglines($nid = NULL, $uri = NULL) {
+  $feed_url    = 'http://www.bloglines.com/search?q=bcite:'. ($uri ? $uri : url('node/'. $nid, NULL, NULL, TRUE)) .'&format=rss';
+  $comment_url = 'http://www.bloglines.com/search?q=bcite:';
+  $response    = drupal_http_request($feed_url);
+  $xml         = simplexml_load_string($response->data);
+
+  $data = array();
+  if ($xml->channel->item) {
+    foreach ($xml->channel->item as $key => $value) {
+      $data["$value->guid"]->nid        = $nid;
+      $data["$value->guid"]->brid       = (string) trim($value->guid);
+      $data["$value->guid"]->title      = (string) trim($value->title);
+      $data["$value->guid"]->link = array(
+        'rel'           => 'alternative',
+        'href'          => (string) $value->link,
+        'content_type'  => 'text/html',
+      );
+      $data["$value->guid"]->comments   = $comment_url .(string) $value->link;
+      $data["$value->guid"]->content    = (string) trim($value->description);
+      $data["$value->guid"]->source = array (
+        'author' => NULL,
+        'uri'    => (string) check_plain(trim(parse_url($value->link, PHP_URL_HOST))),
+      );
+      $data["$value->guid"]->published  = (integer) strtotime(trim($value->pubDate));
+      $data["$value->guid"]->updated    = (integer) strtotime(trim($value->pubDate));
+    }
+  }
+
+  return $data ? $data : array();
+}
+
+/**
  * Implementation of hook_theme().
  */
 function blog_reactions_theme($existing, $type, $theme, $path) {
@@ -275,7 +322,7 @@ function theme_blog_reactions($data = array()) {
 function theme_blog_reactions_item($data) {
   $output = '<div class="blog-reactions-item">';
   $output .= '<div class="reaction">';
-  $output .= '<div class="title">'. l($data->title ? $data->title : 'n/a', url($data->link['href'])) .'</div>';
+  $output .= '<div class="title">'. l($data->title ? strip_tags($data->title) : 'n/a', url($data->link['href'])) .'</div>';
   $output .= '<span class="submitted">'. format_date($data->published, 'medium') .' — </span>';
   $output .= '<span class="description">'. truncate_utf8(strip_tags($data->content), 180, TRUE, TRUE) .'</span>';
   $output .= '</div>';
