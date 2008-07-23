@@ -27,7 +27,7 @@ function blog_reactions_admin_settings() {
       'blogsearch' => t('Google Blogsearch'),
       'bloglines'  => t('Yahoo! Bloglines'),
     ),
-    '#default_value' => variable_get('blog_reactions_services', array('google','technorati','yahoo')),
+    '#default_value' => variable_get('blog_reactions_services', array('technorati', 'blogsearch', 'bloglines')),
     '#description' => t('Choose the services that should be queried.'),
   );
   return system_settings_form($form);

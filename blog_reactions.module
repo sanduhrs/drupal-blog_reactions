@@ -4,7 +4,7 @@
 /**
  * Blog reactions
  * 
- * Fetch blog reactions from Technorati and Google Blog Search
+ * Fetch blog reactions from Technorati, Blogsearch and Bloglines
  * 
  * @author Stefan Auditor <stefan.auditor@erdfisch.de>
  */
