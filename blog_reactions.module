@@ -103,9 +103,7 @@ function blog_reactions_get_items($nid) {
  * Save multiple reaction items
  */
 function blog_reactions_set_items($reactions = array()) {
-  $i=0;
   foreach ($reactions as $key => $item) {
-    $i++;
     $exists = blog_reactions_item_exists($item->brid);
     if ($exists) {
       blog_reactions_update_item($item);
