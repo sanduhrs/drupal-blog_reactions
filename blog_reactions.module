@@ -323,7 +323,6 @@ function blog_reactions_fetch_blogsearch($nid = NULL, $uri = NULL) {
  */
 function blog_reactions_fetch_bloglines($nid = NULL, $uri = NULL) {
   $feed_url    = 'http://www.bloglines.com/search?q=bcite:'. ($uri ? $uri : url('node/'. $nid, NULL, NULL, TRUE)) .'&format=rss';
-  $feed_url    = 'http://www.bloglines.com/search?q=bcite:http://google.com&format=rss';
   $comment_url = 'http://www.bloglines.com/search?q=bcite:';
   $response    = drupal_http_request($feed_url);
   $xml         = simplexml_load_string($response->data);
@@ -387,7 +386,7 @@ function theme_blog_reactions_item($data) {
  */
 function theme_blog_reactions_block($data = array()) {
   $blog_reactions_block_items = variable_get('blog_reactions_block_items', 10);
-  if ($blog_reactions_block_items) {
+  if ($blog_reactions_block_items && count($data)) {
     $result = array_chunk($data, $blog_reactions_block_items, TRUE);
     $data = $result[0];
   }
