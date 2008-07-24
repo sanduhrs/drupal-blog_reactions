@@ -25,6 +25,56 @@ function blog_reactions_menu() {
 }
 
 /**
+ * Implementation of hook_block().
+ */
+function blog_reactions_block($op = 'list', $delta = 0, $edit = array()) {
+  if ($op == 'list') {
+    $blocks[0] = array(
+      'info' => t('Blog reactions'),
+      'cache' => BLOCK_CACHE_PER_PAGE,
+    );
+    return $blocks;
+  }
+  else if ($op == 'configure' && $delta == 0) {
+    $form['items'] = array(
+      '#type' => 'select',
+      '#title' => t('Number of items'),
+      '#default_value' => variable_get('blog_reactions_block_items', 10),
+      '#options' => drupal_map_assoc(array('0', '10', '20', '30', '40', '50', '60', '70', '80', '90', '100')),
+    );
+    return $form;
+  }
+  else if ($op == 'save' && $delta == 0) {
+    variable_set('blog_reactions_block_items', $edit['items']);
+  }
+  else if ($op == 'view') {
+    switch($delta) {
+      case 0:
+        if (arg(0) == 'node' AND is_numeric(arg(1))) {
+          $blog_reactions_node_types   = variable_get('blog_reactions_node_types', array('blog'));
+          if (!in_array($node->type, $blog_reactions_node_types)) {
+            $node = node_load(array('nid' => arg(1)));
+            $blog_reactions_node_types   = variable_get('blog_reactions_node_types', array('blog'));
+            $blog_reactions_node_display = variable_get('blog_reactions_node_display', FALSE);
+            if (!in_array($node->type, $blog_reactions_node_types) AND !$blog_reactions_node_display) {
+              return;
+            }
+            
+            if (user_access('access blog reactions') || user_access('administer blog reactions')) {
+              $block = array(
+                'subject' => t('Blog reactions'),
+                'content' => blog_reactions_block_1($node->nid),
+              );
+            }
+          }
+        }
+        break;
+    }
+    return $block;
+  }
+}
+
+/**
  * Implementation of hook_perm().
  *
  * @return an array of permissions
@@ -37,12 +87,15 @@ function blog_reactions_perm() {
  * Implementation of hook_nodeapi().
  */
 function blog_reactions_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
-  $types = variable_get('blog_reactions_node_types', array());
-  if (!in_array($node->type, $types)) return;
+  $blog_reactions_node_types   = variable_get('blog_reactions_node_types', array('blog'));
+  $blog_reactions_node_display = variable_get('blog_reactions_node_display', FALSE);
+  if (!in_array($node->type, $blog_reactions_node_types)) {
+    return;
+  }
   
   switch ($op) {
     case 'view':
-      if ((user_access('access blog reactions') || user_access('administer blog reactions')) && !$a3) {
+      if ((user_access('access blog reactions') || user_access('administer blog reactions')) && $blog_reactions_node_display && !$a3) {
         $node->content['blog_reactions'] = array(
           '#value' => theme('blog_reactions', $node->blog_reactions['items']),
           '#weight' => 10,
@@ -50,7 +103,7 @@ function blog_reactions_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
       }
       break;
     case 'load':
-      $blog_reactions_node_types = variable_get('blog_reactions_node_types', '');
+      $blog_reactions_node_types = variable_get('blog_reactions_node_types', array('blog'));
       if (in_array($node->type, $blog_reactions_node_types)) {
         $node->blog_reactions['items']       = blog_reactions_get_items($node->nid);
         $node->blog_reactions['last_update'] = blog_reactions_last_update($node->nid);
@@ -65,7 +118,7 @@ function blog_reactions_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
 function blog_reactions_exit($destination = NULL) {
   if (arg(0) == 'node' AND is_numeric(arg(1))) {
     $node = node_load(array('nid' => arg(1)));
-    $types = variable_get('blog_reactions_node_types', array());
+    $types = variable_get('blog_reactions_node_types', array('blog'));
     
     if (in_array($node->type, $types)) {
       if (($node->blog_reactions['last_update']+(60*60)) <= time()) {
@@ -75,6 +128,14 @@ function blog_reactions_exit($destination = NULL) {
       }
     }
   }
+}
+
+/**
+ * Block to display reactions
+ */
+function blog_reactions_block_1($nid) {
+  $node = node_load(array('nid' => $nid));
+  return theme('blog_reactions_block', $node->blog_reactions['items']);
 }
 
 /**
@@ -303,6 +364,12 @@ function blog_reactions_theme($existing, $type, $theme, $path) {
     'blog_reactions_item' => array(
       'arguments' => array('data' => NULL),
     ),
+    'blog_reactions_block' => array(
+      'arguments' => array('data' => NULL),
+    ),
+    'blog_reactions_block_item' => array(
+      'arguments' => array('data' => NULL),
+    ),
   );
 }
 
@@ -332,4 +399,30 @@ function theme_blog_reactions_item($data) {
   $output .= '</div>';
   $output .= '</div>';
   return $output;
+}
+
+/**
+ * Theme container for all reactions
+ */
+function theme_blog_reactions_block($data = array()) {
+  $blog_reactions_block_items = variable_get('blog_reactions_block_items', 10);
+  if ($blog_reactions_block_items && count($data)) {
+    $result = array_chunk($data, $blog_reactions_block_items, TRUE);
+    $data = $result[0];
+  }
+  $output = '<div class="blog-reactions-block">';
+  foreach ($data as $key => $values) {
+    $elements .= theme('blog_reactions_block_item', $values);
+  }
+  $output .= $elements ? $elements : t('No reactions yet.');
+  $output .= '</div>';
+  return $output;
+}
+
+/**
+ * Theme a reaction item
+ */
+function theme_blog_reactions_block_item($data) {
+  $items[] = l($data->title ? strip_tags($data->title) : 'n/a', url($data->link['href'])) .'<br />'. t('@time ago', array('@time' => format_interval(time() - $data->published)));
+  return theme('item_list', $items);
 }
