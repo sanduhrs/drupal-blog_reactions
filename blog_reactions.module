@@ -273,7 +273,7 @@ function blog_reactions_fetch_technorati($nid = NULL, $uri = NULL) {
       $data["$value->guid"]->updated    = (integer) strtotime(trim($value->pubDate));
     }
   }
-  if ($xml->channel->item->title == 'No results' && strpos($xml->channel->item->link, 'technorati.com')) {
+  if (($xml->channel->item->title == 'No results' OR $xml->channel->item->title == 'No reactions') && strpos($xml->channel->item->link, 'technorati.com')) {
     unset($data);
   }
   return $data ? $data : array();
