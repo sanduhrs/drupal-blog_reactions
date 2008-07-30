@@ -223,13 +223,13 @@ function blog_reactions_fetch($nid, $uri = NULL) {
   $reactions_bloglines  = array();
   $services = variable_get('blog_reactions_services', array('technorati', 'blogsearch', 'bloglines'));
   
-  if (in_array('technorati', $services)) {
+  if ($services['technorati']) {
     $reactions_technorati = blog_reactions_fetch_technorati($nid, $uri);
   }
-  if (in_array('blogsearch', $services)) {
+  if ($services['blogsearch']) {
     $reactions_blogsearch = blog_reactions_fetch_blogsearch($nid, $uri);
   }
-  if (in_array('bloglines', $services)) {
+  if ($services['bloglines']) {
     $reactions_bloglines  = blog_reactions_fetch_bloglines($nid, $uri);
   }
   
