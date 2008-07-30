@@ -228,8 +228,6 @@ function blog_reactions_fetch($nid, $uri = NULL) {
   $reactions_bloglines  = array();
   $services = variable_get('blog_reactions_services', array('technorati', 'blogsearch', 'bloglines'));
   
-  $uri = 'http://google.com';
-  
   if ($services['technorati']) {
     $reactions_technorati = blog_reactions_fetch_technorati($nid, $uri);
   }
