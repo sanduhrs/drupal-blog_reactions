@@ -15,6 +15,7 @@
 function blog_reactions_admin_settings() {
   $form['blog_reactions_node_types'] = array(
     '#type' => 'select',
+    '#title' => t('Node types'),
     '#options' => node_get_types('names'),
     '#default_value' => variable_get('blog_reactions_node_types', array('blog')),
     '#multiple' => TRUE,
@@ -22,6 +23,7 @@ function blog_reactions_admin_settings() {
   );
   $form['blog_reactions_services'] = array(
     '#type' => 'checkboxes',
+    '#title' => t('Services'),
     '#options' => array(
       'technorati' => t('Technorati'),
       'blogsearch' => t('Google Blogsearch'),
@@ -35,5 +37,11 @@ function blog_reactions_admin_settings() {
     '#type' => 'checkbox',
     '#default_value' => variable_get('blog_reactions_node_display', FALSE),
   );
-  return system_settings_form($form);
+  $form['blog_reactions_quantity'] = array(
+    '#type' => 'select',
+    '#title' => t('Quantity'),
+    '#options' => drupal_map_assoc(array(0,1,2,3,4,5,10,20,30,40,50,75,100)),
+    '#default_value' => variable_get('blog_reactions_quantity', 0),
+    '#description' => t('Choose the quantity of links, that should be displayed. Choose 0 for no limit.'),
+  );
 }
