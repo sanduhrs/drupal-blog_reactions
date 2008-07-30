@@ -44,4 +44,5 @@ function blog_reactions_admin_settings() {
     '#default_value' => variable_get('blog_reactions_quantity', 0),
     '#description' => t('Choose the quantity of links, that should be displayed. Choose 0 for no limit.'),
   );
+  return system_settings_form($form);
 }
