@@ -141,8 +141,13 @@ function blog_reactions_block_1($nid) {
 /**
  * Load all reactions on a node
  */
-function blog_reactions_get_items($nid) {
-  $result = db_query("SELECT * FROM {blog_reactions} WHERE nid=%d ORDER BY published DESC", $nid);
+function blog_reactions_get_items($nid, $limit = 0) {
+  if (!$limit) {
+    $result = db_query("SELECT * FROM {blog_reactions} WHERE nid=%d ORDER BY published DESC", $nid);
+  }
+  else {
+    $result = db_query_range("SELECT * FROM {blog_reactions} WHERE nid=%d ORDER BY published DESC", $nid, 0, $limit);
+  }
   while ($reaction = db_fetch_object($result)) {
     $reactions[$reaction->brid]->brid      = $reaction->brid;
     $reactions[$reaction->brid]->title     = $reaction->title;
@@ -377,6 +382,11 @@ function blog_reactions_theme($existing, $type, $theme, $path) {
  * Theme container for all reactions
  */
 function theme_blog_reactions($data = array()) {
+  $blog_reactions_quantity = variable_get('blog_reactions_quantity', 0);
+  if ($blog_reactions_quantity && count($data)) {
+    $result = array_chunk($data, $blog_reactions_quantity, TRUE);
+    $data = $result[0];
+  }
   $output = '<div class="blog-reactions">';
   $output .= '<h3 class="title">'. t('Blog reactions') .'</h3>';
   foreach ($data as $key => $values) {
