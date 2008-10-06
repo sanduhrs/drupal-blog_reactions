@@ -430,10 +430,14 @@ function theme_blog_reactions_block($data = array()) {
     $data = $result[0];
   }
   $output = '<div class="blog-reactions-block">';
-  foreach ($data as $key => $values) {
-    $elements .= theme('blog_reactions_block_item', $values);
+  if (count($data)) {
+    foreach ($data as $key => $values) {
+      $elements .= theme('blog_reactions_block_item', $values);
+    }
   }
-  $output .= $elements ? $elements : t('No reactions yet.');
+  else {
+    $output .= t('No reactions yet.');
+  }
   $output .= '</div>';
   return $output;
 }
