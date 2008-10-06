@@ -113,24 +113,6 @@ function blog_reactions_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
 }
 
 /**
- * Implementation of hook_exit().
- */
-function blog_reactions_exit($destination = NULL) {
-  if (arg(0) == 'node' AND is_numeric(arg(1))) {
-    $node = node_load(array('nid' => arg(1)));
-    $types = variable_get('blog_reactions_node_types', array('blog'));
-    
-    if (in_array($node->type, $types)) {
-      if (($node->blog_reactions['last_update']+(60*60)) <= time()) {
-        $uri = url('node/'. $node->nid, array('absolute' => TRUE));
-        $reactions = blog_reactions_fetch($node->nid, $uri);
-        blog_reactions_set_items($reactions);
-      }
-    }
-  }
-}
-
-/**
  * Block to display reactions
  */
 function blog_reactions_block_1($nid) {
@@ -356,6 +338,33 @@ function blog_reactions_fetch_bloglines($nid = NULL, $uri = NULL) {
   }
 
   return $data ? $data : array();
+}
+
+/**
+* Implementation of hook_cron().
+*/
+function blog_reactions_cron() {
+  $limit = variable_get('blog_reactions_cron_quantity', 20);
+  $types = variable_get('blog_reactions_node_types', array('blog'));
+  $last_update_nid = variable_get('blog_reactions_last_update_nid', 0);
+  $where = implode("', '", $types);
+
+  $result = db_query_range("SELECT DISTINCT(n.nid), MAX(br.timestamp) as timestamp FROM {node} n
+                              LEFT JOIN {blog_reactions} br ON br.nid = n.nid
+                              WHERE n.type IN('". $where ."')
+                              AND n.nid > %d
+                              GROUP BY n.nid
+                              ORDER BY n.nid ASC", $last_update_nid, 0, $limit);
+  if (!db_affected_rows()) {
+    variable_set('blog_reactions_last_update_nid', 0);
+  }
+  while ($row = db_fetch_object($result)) {
+    $uri = url('node/'. $row->nid, array('absolute' => TRUE));
+    $reactions = blog_reactions_fetch($row->nid, $uri);
+    blog_reactions_set_items($reactions);
+    watchdog('blog_reactions', t('Node !nid has been updated', array('!nid' => $row->nid)), WATCHDOG_NOTICE, l('View', 'node/'. $row->nid));
+    variable_set('blog_reactions_last_update_nid', $row->nid);
+  }
 }
 
 /**

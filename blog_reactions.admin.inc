@@ -10,7 +10,7 @@
  */
 
 /**
- * 
+ * Administration settings page
  */
 function blog_reactions_admin_settings() {
   $form['blog_reactions_node_types'] = array(
@@ -43,6 +43,13 @@ function blog_reactions_admin_settings() {
     '#options' => drupal_map_assoc(array(0,1,2,3,4,5,10,20,30,40,50,75,100)),
     '#default_value' => variable_get('blog_reactions_quantity', 0),
     '#description' => t('Choose the quantity of links, that should be displayed. Choose 0 for no limit.'),
+  );
+  $form['blog_reactions_cron_quantity'] = array(
+    '#type' => 'select',
+    '#title' => t('Cron'),
+    '#options' => drupal_map_assoc(array(5,10,20,30,40,50,75,100)),
+    '#default_value' => variable_get('blog_reactions_cron_quantity', 20),
+    '#description' => t('Choose the number of nodes wich will be updated per cron run. Default is 20.'),
   );
   return system_settings_form($form);
 }
