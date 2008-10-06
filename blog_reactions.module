@@ -41,6 +41,7 @@ function blog_reactions_block($op = 'list', $delta = 0, $edit = array()) {
       '#title' => t('Number of items'),
       '#default_value' => variable_get('blog_reactions_block_items', 10),
       '#options' => drupal_map_assoc(array('0', '10', '20', '30', '40', '50', '60', '70', '80', '90', '100')),
+      '#description' => t('Number of reactions to show. Choose 0 for no limit.'),
     );
     return $form;
   }
@@ -425,15 +426,21 @@ function theme_blog_reactions_item($data) {
  */
 function theme_blog_reactions_block($data = array()) {
   $blog_reactions_block_items = variable_get('blog_reactions_block_items', 10);
-  if ($blog_reactions_block_items && count($data)) {
-    $result = array_chunk($data, $blog_reactions_block_items, TRUE);
-    $data = $result[0];
-  }
+  
   $output = '<div class="blog-reactions-block">';
-  foreach ($data as $key => $values) {
-    $elements .= theme('blog_reactions_block_item', $values);
+  if (count($data)) {
+    if ($blog_reactions_block_items) {
+      $result = array_chunk($data, $blog_reactions_block_items, TRUE);
+      $data = $result[0];
+    }
+
+    foreach ($data as $key => $values) {
+      $elements .= theme('blog_reactions_block_item', $values);
+    }
   }
-  $output .= $elements ? $elements : t('No reactions yet.');
+  else {
+    $output .= t('No reactions yet.');
+  }
   $output .= '</div>';
   return $output;
 }
