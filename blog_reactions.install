@@ -38,6 +38,7 @@ function blog_reactions_install() {
  */
 function blog_reactions_uninstall() {
   variable_del('blog_reactions_node_types');
+  variable_del('blog_reactions_last_update_nid');
   db_query("DROP TABLE {blog_reactions}");
 }
 
