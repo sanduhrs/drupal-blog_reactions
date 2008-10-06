@@ -433,9 +433,9 @@ function theme_blog_reactions_block($data = array()) {
       $result = array_chunk($data, $blog_reactions_block_items, TRUE);
       $data = $result[0];
     }
-
+    
     foreach ($data as $key => $values) {
-      $elements .= theme('blog_reactions_block_item', $values);
+      $output .= theme('blog_reactions_block_item', $values);
     }
   }
   else {
