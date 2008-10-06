@@ -117,6 +117,8 @@ function blog_reactions_install() {
  * Implementation of hook_uninstall().
  */
 function blog_reactions_uninstall() {
+  variable_del('blog_reactions_block_items');
+  variable_del('blog_reactions_last_update_nid');
   drupal_uninstall_schema('blog_reactions');
 }
 
