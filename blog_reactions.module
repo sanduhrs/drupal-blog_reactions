@@ -356,15 +356,17 @@ function blog_reactions_cron() {
                               AND n.nid > %d
                               GROUP BY n.nid
                               ORDER BY n.nid ASC", $last_update_nid, 0, $limit);
-  if (!db_affected_rows()) {
-    variable_set('blog_reactions_last_update_nid', 0);
-  }
+  $num_rows = FALSE;
   while ($row = db_fetch_object($result)) {
+    $num_rows = TRUE;
     $uri = url('node/'. $row->nid, array('absolute' => TRUE));
     $reactions = blog_reactions_fetch($row->nid, $uri);
     blog_reactions_set_items($reactions);
     watchdog('blog_reactions', t('Node !nid has been updated', array('!nid' => $row->nid)), WATCHDOG_NOTICE, l('View', 'node/'. $row->nid));
     variable_set('blog_reactions_last_update_nid', $row->nid);
+  }
+  if (!$num_rows) {
+    variable_set('blog_reactions_last_update_nid', 0);
   }
 }
 
