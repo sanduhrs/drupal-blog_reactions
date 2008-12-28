@@ -110,6 +110,9 @@ function blog_reactions_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
         $node->blog_reactions['last_update'] = blog_reactions_last_update($node->nid);
       }
       break;
+    case 'delete':
+      db_query("DELETE FROM {blog_reactions} WHERE nid=%s", $node->nid);
+      break;
   }
 }
 
@@ -212,20 +215,25 @@ function blog_reactions_fetch($nid, $uri = NULL) {
   $reactions_blogato    = array();
   $services = variable_get('blog_reactions_services', array('technorati', 'blogsearch', 'bloglines', 'blogato'));
   
-  if ($services['technorati']) {
-    $reactions_technorati = blog_reactions_fetch_technorati($nid, $uri);
+  $data = array();
+  $data = array_merge($data, module_invoke_all('blog_reactions', 'request', array('nid' => $nid, 'uri' => $uri, 'services' => $services)));
+
+  if ($data['services']['technorati']) {
+    $reactions_technorati = blog_reactions_fetch_technorati($data['nid'], $data['uri']);
   }
-  if ($services['blogsearch']) {
-    $reactions_blogsearch = blog_reactions_fetch_blogsearch($nid, $uri);
+  if ($data['services']['blogsearch']) {
+    $reactions_blogsearch = blog_reactions_fetch_blogsearch($data['nid'], $data['uri']);
   }
-  if ($services['bloglines']) {
-    $reactions_bloglines  = blog_reactions_fetch_bloglines($nid, $uri);
+  if ($data['services']['bloglines']) {
+    $reactions_bloglines  = blog_reactions_fetch_bloglines($data['nid'], $data['uri']);
   }
-  if ($services['blogato']) {
-    $reactions_blogato  = blog_reactions_fetch_blogato($nid, $uri);
+  if ($data['services']['blogato']) {
+    $reactions_blogato  = blog_reactions_fetch_blogato($data['nid'], $data['uri']);
   }
   
   $reactions = array_merge($reactions_technorati, $reactions_blogsearch, $reactions_bloglines, $reactions_blogato);
+  $reactions = array_merge($reactions, module_invoke_all('blog_reactions', 'result', array('nid' => $nid, 'uri' => $uri, 'reactions' => $reactions)));
+  
   return $reactions;
 }
 
@@ -274,7 +282,7 @@ function blog_reactions_fetch_blogsearch($nid = NULL, $uri = NULL) {
   $comment_url = 'http://blogsearch.google.com/blogsearch?q=link:';
   $response = drupal_http_request($feed_url);
   $xml = simplexml_load_string($response->data);
-  
+
   $data = array();
   if ($xml->entry) {
     foreach ($xml->entry as $key => $value) {
@@ -401,7 +409,7 @@ function blog_reactions_cron() {
     $uri = url('node/'. $row->nid, array('absolute' => TRUE));
     $reactions = blog_reactions_fetch($row->nid, $uri);
     blog_reactions_set_items($reactions);
-    watchdog('blog_reactions', t('Node !nid has been updated', array('!nid' => $row->nid)), WATCHDOG_NOTICE, l('View', 'node/'. $row->nid));
+    watchdog('blog_reactions', 'Node !nid has been updated', array('!nid' => $row->nid), WATCHDOG_NOTICE, l('View', 'node/'. $row->nid));
     variable_set('blog_reactions_last_update_nid', $row->nid);
   }
   if (!$num_rows) {
