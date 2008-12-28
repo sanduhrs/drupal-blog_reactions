@@ -209,7 +209,8 @@ function blog_reactions_fetch($nid, $uri = NULL) {
   $reactions_technorati = array();
   $reactions_blogsearch = array();
   $reactions_bloglines  = array();
-  $services = variable_get('blog_reactions_services', array('technorati', 'blogsearch', 'bloglines'));
+  $reactions_blogato    = array();
+  $services = variable_get('blog_reactions_services', array('technorati', 'blogsearch', 'bloglines', 'blogato'));
   
   if ($services['technorati']) {
     $reactions_technorati = blog_reactions_fetch_technorati($nid, $uri);
@@ -220,8 +221,11 @@ function blog_reactions_fetch($nid, $uri = NULL) {
   if ($services['bloglines']) {
     $reactions_bloglines  = blog_reactions_fetch_bloglines($nid, $uri);
   }
+  if ($services['blogato']) {
+    $reactions_blogato  = blog_reactions_fetch_blogato($nid, $uri);
+  }
   
-  $reactions = array_merge($reactions_technorati, $reactions_blogsearch, $reactions_bloglines);
+  $reactions = array_merge($reactions_technorati, $reactions_blogsearch, $reactions_bloglines, $reactions_blogato);
   return $reactions;
 }
 
@@ -252,8 +256,8 @@ function blog_reactions_fetch_technorati($nid = NULL, $uri = NULL) {
         'author' => (string) trim($value->source),
         'uri'    => (string) trim(parse_url($value->link, PHP_URL_HOST)),
       );
-      $data["$value->guid"]->published  = (integer) strtotime(trim($value->pubDate));
-      $data["$value->guid"]->updated    = (integer) strtotime(trim($value->pubDate));
+      $data["$value->guid"]->published = (integer) strtotime(trim($value->pubDate));
+      $data["$value->guid"]->updated   = (integer) strtotime(trim($value->pubDate));
     }
   }
   if (($xml->channel->item->title == 'No results' || $xml->channel->item->title == 'No reactions') && strpos($xml->channel->item->link, 'technorati.com')) {
@@ -333,8 +337,43 @@ function blog_reactions_fetch_bloglines($nid = NULL, $uri = NULL) {
         'author' => NULL,
         'uri'    => (string) check_plain(trim(parse_url($value->link, PHP_URL_HOST))),
       );
-      $data["$value->guid"]->published  = (integer) strtotime(trim($value->pubDate));
-      $data["$value->guid"]->updated    = (integer) strtotime(trim($value->pubDate));
+      $data["$value->guid"]->published = (integer) strtotime(trim($value->pubDate));
+      $data["$value->guid"]->updated   = (integer) strtotime(trim($value->pubDate));
+    }
+  }
+
+  return $data ? $data : array();
+}
+
+/**
+ * Fetch XML-Feed from blogato.net
+ */
+function blog_reactions_fetch_blogato($nid = NULL, $uri = NULL) {
+  $feed_url    = 'http://www.blogato.net/rss.php?search='. ($uri ? $uri : url('node/'. $nid, NULL, NULL, TRUE));
+
+  $response    = drupal_http_request($feed_url);
+  $xml         = simplexml_load_string(utf8_encode($response->data));
+
+  $data = array();
+  if ($xml->channel->item) {
+    foreach ($xml->channel->item as $key => $value) {
+      $data["$value->link"]->nid        = $nid;
+      $data["$value->link"]->brid       = (string) trim($value->link);
+      $data["$value->link"]->service    = 'blogato';
+      $data["$value->link"]->title      = (string) trim($value->title);
+      $data["$value->link"]->link = array(
+        'rel'           => 'alternative',
+        'href'          => (string) $value->link,
+        'content_type'  => 'text/html',
+      );
+      $data["$value->link"]->comments   = '';
+      $data["$value->link"]->content    = (string) trim($value->description);
+      $data["$value->link"]->source = array (
+        'author' => NULL,
+        'uri'    => (string) check_plain(trim(parse_url($value->link, PHP_URL_HOST))),
+      );
+      $data["$value->link"]->published = 0;
+      $data["$value->link"]->updated   = 0;
     }
   }
 

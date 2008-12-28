@@ -28,8 +28,9 @@ function blog_reactions_admin_settings() {
       'technorati' => t('Technorati'),
       'blogsearch' => t('Google Blogsearch'),
       'bloglines'  => t('Yahoo! Bloglines'),
+      'blogato'    => t('blogato'),
     ),
-    '#default_value' => variable_get('blog_reactions_services', array('technorati', 'blogsearch', 'bloglines')),
+    '#default_value' => variable_get('blog_reactions_services', array('technorati', 'blogsearch', 'bloglines', 'blogato')),
     '#description' => t('Choose the services that should be queried.'),
   );
   $form['blog_reactions_node_display'] = array(
