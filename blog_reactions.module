@@ -110,6 +110,9 @@ function blog_reactions_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
         $node->blog_reactions['last_update'] = blog_reactions_last_update($node->nid);
       }
       break;
+    case 'delete':
+      db_query("DELETE FROM {blog_reactions} WHERE nid=%s", $node->nid);
+      break;
   }
 }
 
@@ -209,19 +212,28 @@ function blog_reactions_fetch($nid, $uri = NULL) {
   $reactions_technorati = array();
   $reactions_blogsearch = array();
   $reactions_bloglines  = array();
-  $services = variable_get('blog_reactions_services', array('technorati', 'blogsearch', 'bloglines'));
+  $reactions_blogato    = array();
+  $services = variable_get('blog_reactions_services', array('technorati', 'blogsearch', 'bloglines', 'blogato'));
   
-  if ($services['technorati']) {
-    $reactions_technorati = blog_reactions_fetch_technorati($nid, $uri);
+  $data = array();
+  $data = array_merge($data, module_invoke_all('blog_reactions', 'request', array('nid' => $nid, 'uri' => $uri, 'services' => $services)));
+
+  if ($data['services']['technorati']) {
+    $reactions_technorati = blog_reactions_fetch_technorati($data['nid'], $data['uri']);
   }
-  if ($services['blogsearch']) {
-    $reactions_blogsearch = blog_reactions_fetch_blogsearch($nid, $uri);
+  if ($data['services']['blogsearch']) {
+    $reactions_blogsearch = blog_reactions_fetch_blogsearch($data['nid'], $data['uri']);
   }
-  if ($services['bloglines']) {
-    $reactions_bloglines  = blog_reactions_fetch_bloglines($nid, $uri);
+  if ($data['services']['bloglines']) {
+    $reactions_bloglines  = blog_reactions_fetch_bloglines($data['nid'], $data['uri']);
+  }
+  if ($data['services']['blogato']) {
+    $reactions_blogato  = blog_reactions_fetch_blogato($data['nid'], $data['uri']);
   }
   
-  $reactions = array_merge($reactions_technorati, $reactions_blogsearch, $reactions_bloglines);
+  $reactions = array_merge($reactions_technorati, $reactions_blogsearch, $reactions_bloglines, $reactions_blogato);
+  $reactions = array_merge($reactions, module_invoke_all('blog_reactions', 'result', array('nid' => $nid, 'uri' => $uri, 'reactions' => $reactions)));
+  
   return $reactions;
 }
 
@@ -270,7 +282,7 @@ function blog_reactions_fetch_blogsearch($nid = NULL, $uri = NULL) {
   $comment_url = 'http://blogsearch.google.com/blogsearch?q=link:';
   $response = drupal_http_request($feed_url);
   $xml = simplexml_load_string($response->data);
-  
+
   $data = array();
   if ($xml->entry) {
     foreach ($xml->entry as $key => $value) {
@@ -342,12 +354,48 @@ function blog_reactions_fetch_bloglines($nid = NULL, $uri = NULL) {
 }
 
 /**
+ * Fetch XML-Feed from blogato.net
+ */
+function blog_reactions_fetch_blogato($nid = NULL, $uri = NULL) {
+  $uri = str_replace('http://', '', $uri);
+  $feed_url    = 'http://www.blogato.net/rss.php?search='. ($uri ? $uri : url('node/'. $nid, NULL, NULL, TRUE));
+  $response    = drupal_http_request($feed_url);
+  $xml         = simplexml_load_string(utf8_encode($response->data));
+
+  $data = array();
+  if ($xml->channel->item) {
+    foreach ($xml->channel->item as $key => $value) {
+      $data["$value->link"]->nid        = $nid;
+      $data["$value->link"]->brid       = (string) trim($value->link);
+      $data["$value->link"]->service    = 'blogato';
+      $data["$value->link"]->title      = (string) trim($value->title);
+      $data["$value->link"]->link = array(
+        'rel'           => 'alternative',
+        'href'          => (string) $value->link,
+        'content_type'  => 'text/html',
+      );
+      $data["$value->link"]->comments   = '';
+      $data["$value->link"]->content    = (string) trim($value->description);
+      $data["$value->link"]->source = array (
+        'author' => NULL,
+        'uri'    => (string) check_plain(trim(parse_url($value->link, PHP_URL_HOST))),
+      );
+      $data["$value->link"]->published = 0;
+      $data["$value->link"]->updated   = 0;
+    }
+  }
+
+  return $data ? $data : array();
+}
+
+/**
  * Implementation of hook_cron().
  */
 function blog_reactions_cron() {
   $limit = variable_get('blog_reactions_cron_quantity', 20);
   $types = variable_get('blog_reactions_node_types', array('blog'));
   $last_update_nid = variable_get('blog_reactions_last_update_nid', 0);
+
   $where = implode("', '", $types);
 
   $result = db_query_range("SELECT DISTINCT(n.nid), MAX(br.timestamp) as timestamp FROM {node} n
@@ -360,12 +408,21 @@ function blog_reactions_cron() {
     variable_set('blog_reactions_last_update_nid', 0);
   }
   while ($row = db_fetch_object($result)) {
-    $uri = url('node/'. $row->nid, NULL, NULL, TRUE);
-    $reactions = blog_reactions_fetch($row->nid, $uri);
-    blog_reactions_set_items($reactions);
-    watchdog('blog_reactions', t('Node !nid has been updated', array('!nid' => $row->nid)), WATCHDOG_NOTICE, l('View', 'node/'. $row->nid));
+    blog_reactions_update($row->nid);
     variable_set('blog_reactions_last_update_nid', $row->nid);
   }
+}
+
+/**
+ * 
+ */
+function blog_reactions_update($nid, $uri = NULL) {
+  if (!$uri) {
+    $uri = url('node/'. $nid, NULL, NULL, TRUE);
+  }
+  $reactions = blog_reactions_fetch($nid, $uri);
+  blog_reactions_set_items($reactions);
+  watchdog('blog_reactions', t('Node !nid has been updated', array('!nid' => $nid)), WATCHDOG_NOTICE, l('View', 'node/'. $row->nid));
 }
 
 /**
@@ -452,8 +509,9 @@ function blog_reactions_admin_settings() {
       'technorati' => t('Technorati'),
       'blogsearch' => t('Google Blogsearch'),
       'bloglines'  => t('Yahoo! Bloglines'),
+      'blogato'    => t('blogato'),
     ),
-    '#default_value' => variable_get('blog_reactions_services', array('technorati', 'blogsearch', 'bloglines')),
+    '#default_value' => variable_get('blog_reactions_services', array('technorati', 'blogsearch', 'bloglines', 'blogato')),
     '#description' => t('Choose the services that should be queried.'),
   );
   $form['blog_reactions_node_display'] = array(
