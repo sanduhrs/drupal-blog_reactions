@@ -161,7 +161,7 @@ function blog_reactions_get_items($nid, $limit = 0) {
  */
 function blog_reactions_set_items($reactions = array()) {
   foreach ($reactions as $key => $item) {
-    $exists = blog_reactions_item_exists($item->brid);
+    $exists = blog_reactions_item_exists($item);
     if ($exists) {
       blog_reactions_update_item($item);
     }
@@ -193,10 +193,14 @@ function blog_reactions_get_item($brid) {
 }
 
 /**
- * Load single reaction item
+ * Checks whether this blog reaction already exists.
  */
-function blog_reactions_item_exists($brid) {
-  $result = db_result(db_query("SELECT COUNT(brid) as count FROM {blog_reactions} WHERE brid='%s'", $brid));
+function blog_reactions_item_exists($item) {
+  $brid = $item->brid;
+  $href = $item->href;
+  $result_brid = db_result(db_query_range("SELECT COUNT(brid) as count FROM {blog_reactions} WHERE brid='%s'", $brid, 0, 1));
+  $result_href = db_result(db_query_range("SELECT COUNT(brid) as count FROM {blog_reactions} WHERE href='%s'", $href, 0, 1));
+  $result = $result_brid || $result_href;
   return $result ? TRUE : FALSE;
 }
 
