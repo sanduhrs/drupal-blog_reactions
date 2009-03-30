@@ -250,32 +250,34 @@ function blog_reactions_fetch_technorati($nid = NULL, $uri = NULL) {
   $feed_url    = 'http://feeds.technorati.com/search/'. ($uri ? $uri : url('node/'. $nid, NULL, NULL, TRUE));
   $comment_url = 'http://technorati.com/search/';
   $response    = drupal_http_request($feed_url);
-  $xml         = simplexml_load_string($response->data);
+  $xml         = @simplexml_load_string($response->data);
 
-  $data = array();
-  if ($xml->channel->item) {
-    foreach ($xml->channel->item as $key => $value) {
-      $data["$value->guid"]->nid        = $nid;
-      $data["$value->guid"]->brid       = (string) trim($value->guid);
-      $data["$value->guid"]->service    = 'technorati';
-      $data["$value->guid"]->title      = (string) trim($value->title);
-      $data["$value->guid"]->link = array(
-        'rel'           => 'alternative',
-        'href'          => (string) $value->link,
-        'content_type'  => 'text/html',
-      );
-      $data["$value->guid"]->comments   = $comment_url .(string) $value->link;
-      $data["$value->guid"]->content    = (string) trim($value->description);
-      $data["$value->guid"]->source = array (
-        'author' => (string) trim($value->source),
-        'uri'    => (string) trim(parse_url($value->link, PHP_URL_HOST)),
-      );
-      $data["$value->guid"]->published  = (integer) strtotime(trim($value->pubDate));
-      $data["$value->guid"]->updated    = (integer) strtotime(trim($value->pubDate));
+  if (is_object($xml)) {
+    $data = array();
+    if ($xml->channel->item) {
+      foreach ($xml->channel->item as $key => $value) {
+        $data["$value->guid"]->nid        = $nid;
+        $data["$value->guid"]->brid       = (string) trim($value->guid);
+        $data["$value->guid"]->service    = 'technorati';
+        $data["$value->guid"]->title      = (string) trim($value->title);
+        $data["$value->guid"]->link = array(
+          'rel'           => 'alternative',
+          'href'          => (string) $value->link,
+          'content_type'  => 'text/html',
+        );
+        $data["$value->guid"]->comments   = $comment_url .(string) $value->link;
+        $data["$value->guid"]->content    = (string) trim($value->description);
+        $data["$value->guid"]->source = array (
+          'author' => (string) trim($value->source),
+          'uri'    => (string) trim(parse_url($value->link, PHP_URL_HOST)),
+        );
+        $data["$value->guid"]->published  = (integer) strtotime(trim($value->pubDate));
+        $data["$value->guid"]->updated    = (integer) strtotime(trim($value->pubDate));
+      }
     }
-  }
-  if (($xml->channel->item->title == 'No results' || $xml->channel->item->title == 'No reactions') && strpos($xml->channel->item->link, 'technorati.com')) {
-    unset($data);
+    if (($xml->channel->item->title == 'No results' || $xml->channel->item->title == 'No reactions') && strpos($xml->channel->item->link, 'technorati.com')) {
+      unset($data);
+    }
   }
   return $data ? $data : array();
 }
@@ -286,38 +288,40 @@ function blog_reactions_fetch_technorati($nid = NULL, $uri = NULL) {
 function blog_reactions_fetch_blogsearch($nid = NULL, $uri = NULL) {
   $feed_url    = 'http://blogsearch.google.com/blogsearch_feeds?q=link:'. ($uri ? $uri : url('node/'. $nid, NULL, NULL, TRUE));
   $comment_url = 'http://blogsearch.google.com/blogsearch?q=link:';
-  $response = drupal_http_request($feed_url);
-  $xml = simplexml_load_string($response->data);
+  $response    = drupal_http_request($feed_url);
+  $xml         = @simplexml_load_string($response->data);
 
-  $data = array();
-  if ($xml->entry) {
-    foreach ($xml->entry as $key => $value) {
-      $data["$value->id"]->nid        = $nid;
-      $data["$value->id"]->brid       = (string) trim($value->id);
-      $data["$value->id"]->service    = 'blogsearch';
-      $data["$value->id"]->title      = (string) trim($value->title);
-      
-      $link = (array) $value->link;
-      $data["$value->id"]->link = array(
-        'rel'           => (string) $link['@attributes']['rel'],
-        'href'          => (string) $link['@attributes']['href'],
-        'content_type'  => (string) $link['@attributes']['type'],
-      );
-      $data["$value->id"]->comments   = $comment_url .(string) $link['@attributes']['href'];
-      $data["$value->id"]->content    = (string) trim($value->content);
-      
-      $author = (array) $value->author;
-      $data["$value->id"]->source = array (
-        'author' => (string) trim($author['name']),
-        'uri'    => (string) trim($author['uri']),
-      );
-      $data["$value->id"]->published  = (integer) strtotime(trim($value->published));
-      $data["$value->id"]->updated    = (integer) strtotime(trim($value->updated));
-      $data["$value->id"]->link = array(
-        'rel'           => (string) $link['@attributes']['rel'],
-        'href'          => (string) $link['@attributes']['href'],
-        'content_type'  => (string) $link['@attributes']['type'],
-      );
+  if (is_object($xml)) {
+    $data = array();
+    if ($xml->entry) {
+      foreach ($xml->entry as $key => $value) {
+        $data["$value->id"]->nid        = $nid;
+        $data["$value->id"]->brid       = (string) trim($value->id);
+        $data["$value->id"]->service    = 'blogsearch';
+        $data["$value->id"]->title      = (string) trim($value->title);
+        
+        $link = (array) $value->link;
+        $data["$value->id"]->link = array(
+          'rel'           => (string) $link['@attributes']['rel'],
+          'href'          => (string) $link['@attributes']['href'],
+          'content_type'  => (string) $link['@attributes']['type'],
+        );
+        $data["$value->id"]->comments   = $comment_url .(string) $link['@attributes']['href'];
+        $data["$value->id"]->content    = (string) trim($value->content);
+        
+        $author = (array) $value->author;
+        $data["$value->id"]->source = array (
+          'author' => (string) trim($author['name']),
+          'uri'    => (string) trim($author['uri']),
+        );
+        $data["$value->id"]->published  = (integer) strtotime(trim($value->published));
+        $data["$value->id"]->updated    = (integer) strtotime(trim($value->updated));
+        $data["$value->id"]->link = array(
+          'rel'           => (string) $link['@attributes']['rel'],
+          'href'          => (string) $link['@attributes']['href'],
+          'content_type'  => (string) $link['@attributes']['type'],
+        );
+      }
     }
   }
 
@@ -331,28 +335,30 @@ function blog_reactions_fetch_bloglines($nid = NULL, $uri = NULL) {
   $feed_url    = 'http://www.bloglines.com/search?q=bcite:'. ($uri ? $uri : url('node/'. $nid, NULL, NULL, TRUE)) .'&format=rss';
   $comment_url = 'http://www.bloglines.com/search?q=bcite:';
   $response    = drupal_http_request($feed_url);
-  $xml         = simplexml_load_string($response->data);
+  $xml         = @simplexml_load_string($response->data);
 
-  $data = array();
-  if ($xml->channel->item) {
-    foreach ($xml->channel->item as $key => $value) {
-      $data["$value->guid"]->nid        = $nid;
-      $data["$value->guid"]->brid       = (string) trim($value->guid);
-      $data["$value->guid"]->service    = 'bloglines';
-      $data["$value->guid"]->title      = (string) trim($value->title);
-      $data["$value->guid"]->link = array(
-        'rel'           => 'alternative',
-        'href'          => (string) $value->link,
-        'content_type'  => 'text/html',
-      );
-      $data["$value->guid"]->comments   = $comment_url .(string) $value->link;
-      $data["$value->guid"]->content    = (string) trim($value->description);
-      $data["$value->guid"]->source = array (
-        'author' => NULL,
-        'uri'    => (string) check_plain(trim(parse_url($value->link, PHP_URL_HOST))),
-      );
-      $data["$value->guid"]->published  = (integer) strtotime(trim($value->pubDate));
-      $data["$value->guid"]->updated    = (integer) strtotime(trim($value->pubDate));
+  if (is_object($xml)) {
+    $data = array();
+    if ($xml->channel->item) {
+      foreach ($xml->channel->item as $key => $value) {
+        $data["$value->guid"]->nid        = $nid;
+        $data["$value->guid"]->brid       = (string) trim($value->guid);
+        $data["$value->guid"]->service    = 'bloglines';
+        $data["$value->guid"]->title      = (string) trim($value->title);
+        $data["$value->guid"]->link = array(
+          'rel'           => 'alternative',
+          'href'          => (string) $value->link,
+          'content_type'  => 'text/html',
+        );
+        $data["$value->guid"]->comments   = $comment_url .(string) $value->link;
+        $data["$value->guid"]->content    = (string) trim($value->description);
+        $data["$value->guid"]->source = array (
+          'author' => NULL,
+          'uri'    => (string) check_plain(trim(parse_url($value->link, PHP_URL_HOST))),
+        );
+        $data["$value->guid"]->published  = (integer) strtotime(trim($value->pubDate));
+        $data["$value->guid"]->updated    = (integer) strtotime(trim($value->pubDate));
+      }
     }
   }
 
@@ -363,31 +369,33 @@ function blog_reactions_fetch_bloglines($nid = NULL, $uri = NULL) {
  * Fetch XML-Feed from blogato.net
  */
 function blog_reactions_fetch_blogato($nid = NULL, $uri = NULL) {
-  $uri = str_replace('http://', '', $uri);
+  $uri         = str_replace('http://', '', $uri);
   $feed_url    = 'http://www.blogato.net/rss.php?search='. ($uri ? $uri : url('node/'. $nid, NULL, NULL, TRUE));
   $response    = drupal_http_request($feed_url);
-  $xml         = simplexml_load_string(utf8_encode($response->data));
+  $xml         = @simplexml_load_string(utf8_encode($response->data));
 
-  $data = array();
-  if ($xml->channel->item) {
-    foreach ($xml->channel->item as $key => $value) {
-      $data["$value->link"]->nid        = $nid;
-      $data["$value->link"]->brid       = (string) trim($value->link);
-      $data["$value->link"]->service    = 'blogato';
-      $data["$value->link"]->title      = (string) trim($value->title);
-      $data["$value->link"]->link = array(
-        'rel'           => 'alternative',
-        'href'          => (string) $value->link,
-        'content_type'  => 'text/html',
-      );
-      $data["$value->link"]->comments   = '';
-      $data["$value->link"]->content    = (string) trim($value->description);
-      $data["$value->link"]->source = array (
-        'author' => NULL,
-        'uri'    => (string) check_plain(trim(parse_url($value->link, PHP_URL_HOST))),
-      );
-      $data["$value->link"]->published = 0;
-      $data["$value->link"]->updated   = 0;
+  if (is_object($xml)) {
+    $data = array();
+    if ($xml->channel->item) {
+      foreach ($xml->channel->item as $key => $value) {
+        $data["$value->link"]->nid        = $nid;
+        $data["$value->link"]->brid       = (string) trim($value->link);
+        $data["$value->link"]->service    = 'blogato';
+        $data["$value->link"]->title      = (string) trim($value->title);
+        $data["$value->link"]->link = array(
+          'rel'           => 'alternative',
+          'href'          => (string) $value->link,
+          'content_type'  => 'text/html',
+        );
+        $data["$value->link"]->comments   = '';
+        $data["$value->link"]->content    = (string) trim($value->description);
+        $data["$value->link"]->source = array (
+          'author' => NULL,
+          'uri'    => (string) check_plain(trim(parse_url($value->link, PHP_URL_HOST))),
+        );
+        $data["$value->link"]->published = 0;
+        $data["$value->link"]->updated   = 0;
+      }
     }
   }
 
