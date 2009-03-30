@@ -197,7 +197,7 @@ function blog_reactions_get_item($brid) {
  */
 function blog_reactions_item_exists($item) {
   $brid = $item->brid;
-  $href = $item->href;
+  $href = $item->link['href'];
   $result_brid = db_result(db_query_range("SELECT COUNT(brid) as count FROM {blog_reactions} WHERE brid='%s'", $brid, 0, 1));
   $result_href = db_result(db_query_range("SELECT COUNT(brid) as count FROM {blog_reactions} WHERE href='%s'", $href, 0, 1));
   $result = $result_brid || $result_href;
