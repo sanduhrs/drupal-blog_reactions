@@ -422,7 +422,7 @@ function blog_reactions_update($nid, $uri = NULL) {
   }
   $reactions = blog_reactions_fetch($nid, $uri);
   blog_reactions_set_items($reactions);
-  watchdog('blog_reactions', t('Node !nid has been updated', array('!nid' => $nid)), WATCHDOG_NOTICE, l('View', 'node/'. $row->nid));
+  watchdog('blog_reactions', 'Node '. $nid .' has been updated', WATCHDOG_NOTICE, l('View', 'node/'. $row->nid));
 }
 
 /**
