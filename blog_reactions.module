@@ -408,6 +408,7 @@ function blog_reactions_cron() {
                               LEFT JOIN {blog_reactions} br ON br.nid = n.nid
                               WHERE n.type IN('". $where ."')
                               AND n.nid > %d
+                              AND n.status = 1
                               GROUP BY n.nid
                               ORDER BY n.nid ASC", $last_update_nid, 0, $limit);
   if (db_num_rows($result) == 0) {
