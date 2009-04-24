@@ -221,8 +221,8 @@ function blog_reactions_fetch($nid, $uri = NULL) {
   $reactions_blogato    = array();
   $services = variable_get('blog_reactions_services', array('technorati', 'blogsearch', 'bloglines', 'blogato'));
   
-  $data = array();
-  $data = array_merge($data, module_invoke_all('blog_reactions', 'request', array('nid' => $nid, 'uri' => $uri, 'services' => $services)));
+  $data = array('nid' => $nid, 'uri' => $uri, 'services' => $services);
+  $data = array_merge($data, module_invoke_all('blog_reactions', 'request', $data));
 
   if ($data['services']['technorati']) {
     $reactions_technorati = blog_reactions_fetch_technorati($data['nid'], $data['uri']);
