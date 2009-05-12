@@ -1,0 +1,179 @@
+# $Id$
+#
+# LANGUAGE translation of Drupal (general)
+# Copyright YEAR NAME <EMAIL@ADDRESS>
+# Generated from files:
+#  blog_reactions.admin.inc,v 1.1.2.10 2008/12/28 19:11:17 sanduhrs
+#  blog_reactions.module,v 1.2.2.26 2009/04/24 09:11:05 sanduhrs
+#  blog_reactions.info,v 1.2.2.3 2008/07/23 18:39:00 sanduhrs
+#  blog_reactions.install,v 1.2.2.2 2008/10/06 19:21:03 sanduhrs
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"POT-Creation-Date: 2009-05-12 11:50+0200\n"
+"PO-Revision-Date: YYYY-mm-DD HH:MM+ZZZZ\n"
+"Last-Translator: NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <EMAIL@ADDRESS>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+#: blog_reactions.admin.inc:18
+msgid "Node types"
+msgstr ""
+
+#: blog_reactions.admin.inc:22
+msgid "Choose the node type(s) that should fetch blog reactions."
+msgstr ""
+
+#: blog_reactions.admin.inc:26
+msgid "Services"
+msgstr ""
+
+#: blog_reactions.admin.inc:28
+msgid "Technorati"
+msgstr ""
+
+#: blog_reactions.admin.inc:29
+msgid "Google Blogsearch"
+msgstr ""
+
+#: blog_reactions.admin.inc:30
+msgid "Yahoo! Bloglines"
+msgstr ""
+
+#: blog_reactions.admin.inc:31
+msgid "blogato"
+msgstr ""
+
+#: blog_reactions.admin.inc:34
+msgid "Choose the services that should be queried."
+msgstr ""
+
+#: blog_reactions.admin.inc:37
+msgid "Display the reactions underneath the node"
+msgstr ""
+
+#: blog_reactions.admin.inc:43
+msgid "Quantity"
+msgstr ""
+
+#: blog_reactions.admin.inc:46
+msgid "Choose the quantity of links, that should be displayed. Choose 0 for no limit."
+msgstr ""
+
+#: blog_reactions.admin.inc:50
+msgid "Cron"
+msgstr ""
+
+#: blog_reactions.admin.inc:53
+msgid "Choose the number of nodes wich will be updated per cron run. Default is 20."
+msgstr ""
+
+#: blog_reactions.module:33;66;462;17 blog_reactions.info:0
+msgid "Blog reactions"
+msgstr ""
+
+#: blog_reactions.module:41
+msgid "Number of items"
+msgstr ""
+
+#: blog_reactions.module:44
+msgid "Number of reactions to show. Choose 0 for no limit."
+msgstr ""
+
+#: blog_reactions.module:466;503
+msgid "No reactions yet."
+msgstr ""
+
+#: blog_reactions.module:513
+msgid "@time ago"
+msgstr ""
+
+#: blog_reactions.module:424;0
+msgid "blog_reactions"
+msgstr ""
+
+#: blog_reactions.module:424
+msgid "Node !nid has been updated"
+msgstr ""
+
+#: blog_reactions.module:84
+msgid "administer blog reactions"
+msgstr ""
+
+#: blog_reactions.module:84
+msgid "access blog reactions"
+msgstr ""
+
+#: blog_reactions.module:18
+msgid "Change blog reactions settings."
+msgstr ""
+
+#: blog_reactions.install:17
+msgid "The base table for blog reactions."
+msgstr ""
+
+#: blog_reactions.install:20
+msgid "The primary identifier for a node."
+msgstr ""
+
+#: blog_reactions.install:25
+msgid "The primary identifier for a rection."
+msgstr ""
+
+#: blog_reactions.install:31
+msgid "The reactions origin."
+msgstr ""
+
+#: blog_reactions.install:37
+msgid "The title for the reaction."
+msgstr ""
+
+#: blog_reactions.install:43
+msgid "Link rel value."
+msgstr ""
+
+#: blog_reactions.install:49
+msgid "Link destination."
+msgstr ""
+
+#: blog_reactions.install:55
+msgid "Link content-type."
+msgstr ""
+
+#: blog_reactions.install:61
+msgid "Link to comments of reaction."
+msgstr ""
+
+#: blog_reactions.install:67
+msgid "Description for the reaction."
+msgstr ""
+
+#: blog_reactions.install:73
+msgid "Source author name."
+msgstr ""
+
+#: blog_reactions.install:79
+msgid "Source author website."
+msgstr ""
+
+#: blog_reactions.install:85
+msgid "Published timestamp."
+msgstr ""
+
+#: blog_reactions.install:90
+msgid "Updated timestamp."
+msgstr ""
+
+#: blog_reactions.install:95
+msgid "Last fetched timestamp."
+msgstr ""
+
+#: blog_reactions.info:0
+msgid "Display Technorati, Google Blogsearch and Yahoo! Bloglines results for a node."
+msgstr ""
+

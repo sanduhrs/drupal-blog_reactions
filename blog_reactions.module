@@ -14,8 +14,8 @@
  */
 function blog_reactions_menu() {
   $items['admin/settings/blog_reactions'] = array(
-    'title' => t('Blog reactions'),
-    'description' => t('Change blog reactions settings.'),
+    'title' => 'Blog reactions',
+    'description' => 'Change blog reactions settings.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('blog_reactions_admin_settings'),
     'access arguments' => array('administer blog reactions'),
