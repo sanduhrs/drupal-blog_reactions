@@ -1,4 +1,3 @@
-; $Id$
 name = Blog reactions 
 description  = "Display Technorati, Google Blogsearch and Yahoo! Bloglines results for a node."
 core = 6.x
